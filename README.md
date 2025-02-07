@@ -5,4 +5,4 @@ Hardware
 
 Software
 
-- python code 
+- python with pyrtlsdr libery  
