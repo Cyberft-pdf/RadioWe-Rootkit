@@ -1,8 +1,8 @@
-Hardware
+#Hardware
 
 - RTL-SDR V4 
 - calbe RG174
 
-Software
+#Software
 
 - python with pyrtlsdr libery  
