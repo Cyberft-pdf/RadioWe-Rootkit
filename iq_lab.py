@@ -51,6 +51,43 @@ def capture_samples(cfg: CaptureConfig, num_samples: int) -> np.ndarray:
         sdr.close()
 
 
+class RtlSdrSession:
+    """Keep the dongle open for repeated captures (e.g. live UI)."""
+
+    def __init__(self, cfg: CaptureConfig) -> None:
+        if RtlSdr is None:
+            raise RuntimeError(
+                "pyrtlsdr / librtlsdr is not available. Install requirements and RTL-SDR drivers."
+            )
+        self._cfg = cfg
+        self._sdr = RtlSdr()
+        self._sdr.sample_rate = cfg.sample_rate_hz
+        self._sdr.center_freq = cfg.center_hz
+        self._sdr.gain = cfg.gain_db if isinstance(cfg.gain_db, str) else float(cfg.gain_db)
+        if cfg.bias_tee and hasattr(self._sdr, "set_bias_tee"):
+            self._sdr.set_bias_tee(True)
+
+    @property
+    def sample_rate_hz(self) -> float:
+        return float(self._cfg.sample_rate_hz)
+
+    @property
+    def center_hz(self) -> float:
+        return float(self._sdr.center_freq)
+
+    def set_center_hz(self, hz: float) -> None:
+        self._sdr.center_freq = hz
+
+    def read(self, num_samples: int) -> np.ndarray:
+        if num_samples <= 0:
+            raise ValueError("num_samples must be positive")
+        raw = self._sdr.read_samples(num_samples)
+        return np.asarray(raw, dtype=np.complex64)
+
+    def close(self) -> None:
+        self._sdr.close()
+
+
 def _hann(n: int) -> np.ndarray:
     return np.hanning(n).astype(np.float32)
 

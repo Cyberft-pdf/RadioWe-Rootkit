@@ -115,6 +115,22 @@ def _cmd_analyze(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_ui(args: argparse.Namespace) -> int:
+    from spectrum_ui import UiConfig, run_spectrum_ui
+
+    return run_spectrum_ui(
+        UiConfig(
+            center_mhz=args.center_mhz,
+            rate_msps=args.rate_msps,
+            gain=args.gain,
+            fft_size=args.fft_size,
+            averages=args.averages,
+            bias_tee=args.bias_tee,
+            demo=args.demo,
+        )
+    )
+
+
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="RTL-SDR lab capture / spectrum")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -148,6 +164,17 @@ def _build_parser() -> argparse.ArgumentParser:
     sa.add_argument("--averages", type=int, default=32)
     sa.add_argument("--export-csv", type=str, default="", help="Optional path for freq,psd CSV")
     sa.set_defaults(func=_cmd_analyze)
+
+    su = sub.add_parser("ui", help="Live spectrum window (pygame)")
+    add_common(su)
+    su.add_argument("--fft-size", type=int, default=1024)
+    su.add_argument("--averages", type=int, default=4)
+    su.add_argument(
+        "--demo",
+        action="store_true",
+        help="Synthetic IQ (no dongle); spectrum is fake, arrows still move displayed center",
+    )
+    su.set_defaults(func=_cmd_ui)
 
     return p
 
